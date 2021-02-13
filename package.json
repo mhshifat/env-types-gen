@@ -1,21 +1,21 @@
 {
 	"name": "@mhshifat/env-types-gen",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "",
 	"main": "./dist",
 	"scripts": {
 		"start": "node ./dist",
-		"serve": "nodemon --exec ts-node src/index.ts"
+		"serve": "nodemon --exec ts-node src/index.ts",
+		"build": "tsc -p ."
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"@types/node": "^14.14.27",
 		"nodemon": "^2.0.7",
 		"ts-node": "^9.1.1",
 		"typescript": "^4.1.3"
 	},
-	"dependencies": {
-		"dotenv": "^8.2.0"
-	}
+	"dependencies": {}
 }
