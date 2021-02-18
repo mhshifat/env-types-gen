@@ -1,80 +1,116 @@
+#!/usr/bin/env node
+
+import chalk from "chalk";
 import fs from "fs";
 import path from "path";
+
+const [, , arg] = process.argv;
+
+if (arg !== "generate") process.exit();
 
 // Set environment for development...
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
-(() => {
-	// Don't execute code when in production...
-	if (process.env.NODE_ENV === "production") return;
+const ENV_FILE_TYPE_DEC_CON = `
+  declare namespace NodeJS {
+    export interface ProcessEnv {
+      // Replace...
+    }
+  }
+`;
 
-	// Show error if .env file doesn't exist...
-	const isEnvFileExist = fs.existsSync(path.join(process.cwd(), ".env"));
-	if (!isEnvFileExist)
-		throw new Error(
-			"📜 Please specify a '.env' file in the root of your project..."
-		);
+init().catch(console.error);
 
-	// Watch for file changes in '.env' file...
-	watchDotEnvFile()
-		.then((envVariables) => {
-			// Check to see if there is a 'src' directory...
-			// If so save env variable to a "env.d.ts" file...
-			// Else save to current working directory...
-			const isSrcDirExist = fs.existsSync(path.join(process.cwd(), "src"));
-			if (isSrcDirExist)
-				generateTypesForDotEnv(path.join(process.cwd(), "src"), envVariables);
-			else generateTypesForDotEnv(process.cwd(), envVariables);
-		})
-		.catch((err: Error) => {
-			throw new Error(err.message);
-		});
-})();
-
-async function watchDotEnvFile(): Promise<string[]> {
-	const envVariables: string[] = [];
-
-	return new Promise((resolve, reject) => {
+async function init(): Promise<void> {
+	try {
 		const envFilePath = path.join(process.cwd(), ".env");
-		fs.watch(envFilePath, (evt, filename) => {
-			if (filename && evt === "change") {
-				fs.readFile(envFilePath, "utf8", (err, data) => {
-					if (err) return reject(err.message);
-					// Extract env variables from data...
-					const dataArray = data.split("\n");
-					for (const line of dataArray) {
-						envVariables.push(line.split("=")[0].replace(/["']/g, ""));
-					}
-					return resolve(envVariables);
-				});
-			}
+		await isFileExist(
+			envFilePath,
+			"📜  Please specify a '.env' file in the root of your project..."
+		);
+		const envFileContent = await readDotEnvFileContent();
+		const extractedData = await extractEnvVariables(envFileContent);
+		const generatedTypes = await generateTypesForDotEnvFile(extractedData);
+		await writeToFile(generatedTypes);
+	} catch (err) {
+		return Promise.reject(err);
+	}
+}
+
+async function isFileExist(
+	filePath: string,
+	errMessage?: string
+): Promise<boolean> {
+	return new Promise((resolve, reject) => {
+		fs.stat(filePath, (err, stats) => {
+			if (err) return reject(chalk.red(errMessage || "File not found!"));
+			return resolve(stats.isFile());
 		});
 	});
 }
 
-function generateTypesForDotEnv(directoryPath: string, envVariables: string[]) {
-	fs.mkdirSync(path.join(directoryPath, "types"), { recursive: true });
-	fs.writeFile(
-		path.join(directoryPath, "types", "env.d.ts"),
-		writeToEnvFile(envVariables),
-		(err) => {
-			if (err) throw new Error(err.message);
-			console.log("📜 'Env variables' types generated!");
-		}
-	);
+async function readDotEnvFileContent(filePath?: string): Promise<string> {
+	return new Promise((resolve, reject) => {
+		fs.readFile(
+			filePath || path.join(process.cwd(), ".env"),
+			{ encoding: "utf-8" },
+			(err, data) => {
+				if (err) return reject(err.message);
+				return resolve(data);
+			}
+		);
+	});
 }
 
-function writeToEnvFile(variables: string[]) {
-	const content = `
-    declare namespace NodeJS {
-      export interface ProcessEnv {
-        // Replace...
-      }
-    }
-  `;
+async function extractEnvVariables(content: string): Promise<string[]> {
+	return new Promise((resolve) => {
+		return resolve(content.split("\n").map((item) => item.split("=")[0]));
+	});
+}
 
-	return content.replace(
-		"// Replace...",
-		variables.map((key) => `${key}: string;\n`).join("")
-	);
+async function generateTypesForDotEnvFile(
+	dotEnvFileData: string[]
+): Promise<string> {
+	return new Promise((resolve) => {
+		return resolve(
+			ENV_FILE_TYPE_DEC_CON.replace(
+				"// Replace...",
+				dotEnvFileData.map((item) => `${item}: string;\n`).join("")
+			)
+		);
+	});
+}
+
+async function writeToFile(content: string): Promise<void> {
+	const writeToTypesDir = async (pathStr?: string): Promise<void> => {
+		const pathToCreate = pathStr
+			? path.join(pathStr, "types")
+			: path.join(process.cwd(), "types");
+		fs.stat(pathToCreate, (err, stats) => {
+			if (err || !stats.isDirectory()) {
+				fs.mkdir(pathToCreate, (err) => {
+					if (err) return Promise.reject(err.message);
+				});
+			}
+			fs.writeFile(
+				path.join(pathToCreate, "types.d.ts"),
+				content,
+				{ encoding: "utf-8" },
+				(err) => {
+					if (err) return Promise.reject(err.message);
+					console.log(chalk.green("📜  'Env variables' types generated!"));
+				}
+			);
+			return Promise.resolve();
+		});
+	};
+
+	return new Promise((resolve, reject) => {
+		fs.stat(path.join(process.cwd(), "src"), (err, stats) => {
+			if (err) return reject(err.message);
+			if (stats.isDirectory()) writeToTypesDir(path.join(process.cwd(), "src"));
+			else writeToTypesDir();
+			return resolve();
+		});
+	});
 }
