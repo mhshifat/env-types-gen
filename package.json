@@ -1,6 +1,6 @@
 {
 	"name": "@mhshifat/env-types-gen",
-	"version": "1.0.10",
+	"version": "1.0.11",
 	"description": "A simple script to generate types from a '.env' file in your project.",
 	"main": "./build/index.js",
 	"files": [
@@ -20,7 +20,7 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
-		"@mhshifat/env-types-gen": "^1.0.10",
+		"@mhshifat/env-types-gen": "^1.0.11",
 		"@types/node": "^14.14.27",
 		"nodemon": "^2.0.7",
 		"ts-node": "^9.1.1",

@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@mhshifat/env-types-gen@^1.0.10":
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/@mhshifat/env-types-gen/-/env-types-gen-1.0.10.tgz#d776716b3b7dacf732c186546d013ee02a21d82b"
-  integrity sha512-+PD9/t875CW3m7xitXtq9qPT+KDW4Gh62lqDt/KC9eiRrDiRSNycdgE0NMiK8qvQqk2e2jApGuAb9Og/pkRDsg==
+"@mhshifat/env-types-gen@^1.0.11":
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/@mhshifat/env-types-gen/-/env-types-gen-1.0.11.tgz#1ebcaeea25f0df48fec0f3efb752370e44403d48"
+  integrity sha512-mY7wpsMT7l9fSOAACCPdPrgZTjaYJR9FtogWaAYaylgSjvOQe815leeEQJW0j9Uup2x0V8sVkZdIiWujtt7osw==
   dependencies:
     chalk "^4.1.0"
 

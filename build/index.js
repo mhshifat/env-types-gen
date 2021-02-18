@@ -49,35 +49,40 @@ if (arg !== "generate")
 // Set environment for development...
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 var ENV_FILE_TYPE_DEC_CON = "\n  declare namespace NodeJS {\n    export interface ProcessEnv {\n      // Replace...\n    }\n  }\n";
-init().catch(console.error);
+var envFilePath = path_1.default.join(process.cwd(), ".env");
+isFileExist(envFilePath, "📜  Please specify a '.env' file in the root of your project...")
+    .then(function () {
+    fs_1.default.watch(envFilePath, function (event, fileName) {
+        if (event === "change" && fileName) {
+            init();
+        }
+    });
+})
+    .catch(console.error);
 function init() {
     return __awaiter(this, void 0, void 0, function () {
-        var envFilePath, envFileContent, extractedData, generatedTypes, err_1;
+        var envFileContent, extractedData, generatedTypes, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 6, , 7]);
-                    envFilePath = path_1.default.join(process.cwd(), ".env");
-                    return [4 /*yield*/, isFileExist(envFilePath, "📜  Please specify a '.env' file in the root of your project...")];
-                case 1:
-                    _a.sent();
+                    _a.trys.push([0, 5, , 6]);
                     return [4 /*yield*/, readDotEnvFileContent()];
-                case 2:
+                case 1:
                     envFileContent = _a.sent();
                     return [4 /*yield*/, extractEnvVariables(envFileContent)];
-                case 3:
+                case 2:
                     extractedData = _a.sent();
                     return [4 /*yield*/, generateTypesForDotEnvFile(extractedData)];
-                case 4:
+                case 3:
                     generatedTypes = _a.sent();
                     return [4 /*yield*/, writeToFile(generatedTypes)];
-                case 5:
+                case 4:
                     _a.sent();
-                    return [3 /*break*/, 7];
-                case 6:
+                    return [3 /*break*/, 6];
+                case 5:
                     err_1 = _a.sent();
                     return [2 /*return*/, Promise.reject(err_1)];
-                case 7: return [2 /*return*/];
+                case 6: return [2 /*return*/];
             }
         });
     });

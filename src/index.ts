@@ -19,15 +19,22 @@ const ENV_FILE_TYPE_DEC_CON = `
   }
 `;
 
-init().catch(console.error);
+const envFilePath = path.join(process.cwd(), ".env");
+isFileExist(
+	envFilePath,
+	"📜  Please specify a '.env' file in the root of your project..."
+)
+	.then(() => {
+		fs.watch(envFilePath, (event, fileName) => {
+			if (event === "change" && fileName) {
+				init();
+			}
+		});
+	})
+	.catch(console.error);
 
 async function init(): Promise<void> {
 	try {
-		const envFilePath = path.join(process.cwd(), ".env");
-		await isFileExist(
-			envFilePath,
-			"📜  Please specify a '.env' file in the root of your project..."
-		);
 		const envFileContent = await readDotEnvFileContent();
 		const extractedData = await extractEnvVariables(envFileContent);
 		const generatedTypes = await generateTypesForDotEnvFile(extractedData);
